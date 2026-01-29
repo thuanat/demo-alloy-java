@@ -2,7 +2,7 @@ FROM eclipse-temurin:11-jre
 
 WORKDIR /app
 
-COPY target/demo-0.0.1.jar app.jar
+COPY target/*.jar app.jar
 COPY otel/opentelemetry-javaagent.jar /otel/opentelemetry-javaagent.jar
 
 ENV JAVA_TOOL_OPTIONS="-javaagent:/otel/opentelemetry-javaagent.jar"
