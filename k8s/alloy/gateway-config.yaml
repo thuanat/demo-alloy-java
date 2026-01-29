@@ -5,102 +5,86 @@ metadata:
   namespace: monitor
 data:
   gateway.hcl: |
-    logging {
-      level = "info"
+   logging {
+  level = "info"
+}
+
+otelcol.receiver.otlp "default" {
+  grpc {}
+  http {}
+}
+
+otelcol.processor.batch "default" {}
+
+otelcol.processor.tail_sampling "apm" {
+  policy {
+    name = "errors"
+    type = "status_code"
+    status_code {
+      status_codes = ["ERROR"]
+    }
+  }
+
+  policy {
+    name = "slow"
+    type = "latency"
+    latency {
+      threshold_ms = 2000
+    }
+  }
+
+  policy {
+    name = "baseline"
+    type = "probabilistic"
+    probabilistic {
+      sampling_percentage = 10
+    }
+  }
+}
+
+otelcol.exporter.otlp "tempo" {
+  client {
+    endpoint = "tempo.monitor.svc:4317"
+    tls {
+      insecure = true
+    }
+  }
+}
+
+otelcol.exporter.otlp "mimir" {
+  client {
+    endpoint = "mimir.monitor.svc:8080"
+    tls {
+      insecure = true
+    }
+  }
+}
+
+otelcol.exporter.loki "loki" {
+  endpoint = "http://loki.monitor.svc:3100/loki/api/v1/push"
+}
+
+otelcol.service "default" {
+  pipelines {
+    traces {
+      receivers  = [otelcol.receiver.otlp.default]
+      processors = [
+        otelcol.processor.batch.default,
+        otelcol.processor.tail_sampling.apm
+      ]
+      exporters  = [otelcol.exporter.otlp.tempo]
     }
 
-    ########################
-    # RECEIVER
-    ########################
-    otelcol.receiver.otlp "default" {
-      grpc {}
-      http {}
+    metrics {
+      receivers  = [otelcol.receiver.otlp.default]
+      processors = [otelcol.processor.batch.default]
+      exporters  = [otelcol.exporter.otlp.mimir]
     }
 
-    ########################
-    # PROCESSORS
-    ########################
-    otelcol.processor.batch "default" {}
-
-    otelcol.processor.tail_sampling "apm" {
-      policy {
-        name = "errors"
-        type = "status_code"
-        status_code {
-          status_codes = ["ERROR"]
-        }
-      }
-
-      policy {
-        name = "slow"
-        type = "latency"
-        latency {
-          threshold_ms = 2000
-        }
-      }
-
-      policy {
-        name = "baseline"
-        type = "probabilistic"
-        probabilistic {
-          sampling_percentage = 10
-        }
-      }
+    logs {
+      receivers  = [otelcol.receiver.otlp.default]
+      processors = [otelcol.processor.batch.default]
+      exporters  = [otelcol.exporter.loki.loki]
     }
-
-    ########################
-    # EXPORTERS
-    ########################
-
-    # ---- TRACES → TEMPO ----
-    otelcol.exporter.otlp "tempo" {
-      client {
-        endpoint = "tempo.monitor.svc:4317"
-        tls {
-          insecure = true
-        }
-      }
-    }
-
-    # ---- METRICS → MIMIR ----
-    otelcol.exporter.otlp "mimir" {
-      client {
-        endpoint = "mimir.monitor.svc:8080"
-        tls {
-          insecure = true
-        }
-      }
-    }
-
-    # ---- LOGS → LOKI ----
-    otelcol.exporter.loki "loki" {
-      endpoint = "http://loki.monitor.svc:3100/loki/api/v1/push"
-    }
-
-    ########################
-    # SERVICE PIPELINES
-    ########################
-    otelcol.service "default" {
-      pipelines {
-        traces {
-          receivers  = [otelcol.receiver.otlp.default]
-          processors = [
-            otelcol.processor.batch.default,
-            otelcol.processor.tail_sampling.apm
-          ]
-          exporters  = [otelcol.exporter.otlp.tempo]
-        }
-
-        metrics {
-          receivers  = [otelcol.receiver.otlp.default]
-          processors = [otelcol.processor.batch.default]
-          exporters  = [otelcol.exporter.otlp.mimir]
-        }
-
-        logs {
-          receivers  = [otelcol.receiver.otlp.default]
-          processors = [otelcol.processor.batch.default]
-          exporters  = [otelcol.exporter.loki.loki]
-        }
-      }
-    }
+  }
+}
