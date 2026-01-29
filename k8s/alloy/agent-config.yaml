@@ -24,7 +24,7 @@ data:
     }
 
     // =========================
-    // OTLP RECEIVER (TRACES + METRICS)
+    // OTLP RECEIVER
     // =========================
     otelcol.receiver.otlp "default" {
       grpc {}
@@ -37,10 +37,10 @@ data:
     }
 
     // =========================
-    // ADD STATIC ATTRIBUTES (ALLOY STYLE)
+    // ADD STATIC ATTRIBUTE (ALLOY CORRECT)
     // =========================
     otelcol.processor.attributes "env" {
-      attributes {
+      attribute {
         key   = "deployment.environment"
         value = "demo"
       }
@@ -52,7 +52,7 @@ data:
     }
 
     // =========================
-    // EXPORT TO ALLOY GATEWAY
+    // EXPORT TO GATEWAY
     // =========================
     otelcol.exporter.otlp "gateway" {
       client {
