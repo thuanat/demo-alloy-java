@@ -31,28 +31,13 @@ data:
       http {}
 
       output {
-        traces  = [otelcol.processor.attributes.env.input]
-        metrics = [otelcol.processor.attributes.env.input]
-      }
-    }
-
-    // =========================
-    // ADD STATIC ATTRIBUTE (ALLOY CORRECT)
-    // =========================
-    otelcol.processor.attributes "env" {
-      attribute {
-        key   = "deployment.environment"
-        value = "demo"
-      }
-
-      output {
         traces  = [otelcol.exporter.otlp.gateway.input]
         metrics = [otelcol.exporter.otlp.gateway.input]
       }
     }
 
     // =========================
-    // EXPORT TO GATEWAY
+    // EXPORT TO ALLOY GATEWAY
     // =========================
     otelcol.exporter.otlp "gateway" {
       client {
