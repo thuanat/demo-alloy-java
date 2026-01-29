@@ -15,7 +15,8 @@ spec:
     spec:
       containers:
       - name: mimir
-        image: grafana/mimir:2.11.0
+        image: grafana/mimir:2.10.3
+        imagePullPolicy: IfNotPresent
         args:
           - -config.file=/etc/mimir/mimir.yaml
         ports:
