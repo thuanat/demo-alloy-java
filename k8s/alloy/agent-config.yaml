@@ -6,7 +6,7 @@ metadata:
 data:
   agent.hcl: |
     // =========================
-    // K8s POD DISCOVERY (LOGS)
+    // K8S LOG COLLECTION
     // =========================
     discovery.kubernetes "pods" {
       role = "pod"
@@ -24,34 +24,26 @@ data:
     }
 
     // =========================
-    // OTEL RECEIVER (TRACE + METRIC)
+    // OTLP RECEIVER
     // =========================
     otelcol.receiver.otlp "default" {
       grpc {}
       http {}
 
       output {
-        traces  = [otelcol.processor.attributes.k8s.input]
-        metrics = [otelcol.processor.attributes.k8s.input]
+        traces  = [otelcol.processor.attributes.add_env.input]
+        metrics = [otelcol.processor.attributes.add_env.input]
       }
     }
 
     // =========================
-    // ADD K8S / CLUSTER ATTRIBUTES
+    // ADD STATIC ATTRIBUTES (SAFE SYNTAX)
     // =========================
-    otelcol.processor.attributes "k8s" {
-      actions = [
-        {
-          action = "insert",
-          key    = "k8s.cluster.name",
-          value  = "demo-cluster",
-        },
-        {
-          action = "insert",
-          key    = "deployment.environment",
-          value  = "demo",
-        }
-      ]
+    otelcol.processor.attributes "add_env" {
+      action {
+        key   = "deployment.environment"
+        value = "demo"
+      }
 
       output {
         traces  = [otelcol.exporter.otlp.gateway.input]
