@@ -5,9 +5,25 @@ metadata:
   namespace: monitor
 data:
   agent.hcl: |
-    otelcol.receiver.otlp "otlp" {
+    discovery.kubernetes "pods" {
+      role = "pod"
+    }
+
+    loki.source.kubernetes "pods" {
+      targets    = discovery.kubernetes.pods.targets
+      forward_to = [loki.write.default.receiver]
+    }
+
+    loki.write "default" {
+      endpoint {
+        url = "http://loki.monitor.svc:3100/loki/api/v1/push"
+      }
+    }
+
+    otelcol.receiver.otlp "default" {
       grpc {}
       http {}
+
       output {
         traces  = [otelcol.exporter.otlp.gateway.input]
         metrics = [otelcol.exporter.otlp.gateway.input]
@@ -15,27 +31,33 @@ data:
     }
 
     otelcol.exporter.otlp "gateway" {
-      endpoint = "alloy-gateway.monitor.svc:4317"
-      tls { insecure = true }
-    }
-
-    loki.source.kubernetes "pods" {
-      forward_to = [loki.process.pods.receiver]
-    }
-
-    loki.process "pods" {
-      stage.labels {
-        values = {
-          namespace = ""
-          pod       = ""
-          container = ""
+      client {
+        endpoint = "alloy-gateway.monitor.svc:4317"
+        tls {
+          insecure = true
         }
       }
-      forward_to = [loki.write.gateway.receiver]
     }
 
-    loki.write "gateway" {
-      endpoint {
-        url = "http://loki.monitor.svc:3100/loki/api/v1/push"
+    otelcol.processor.resource "k8s" {
+      attributes {
+        action = "insert"
+        key    = "k8s.cluster.name"
+        value  = "demo-cluster"
+      }
+
+      attributes {
+        action = "insert"
+        key    = "k8s"
+        value = {
+          namespace = "",
+          pod       = "",
+          container = "",
+        }
+      }
+
+      output {
+        traces  = [otelcol.exporter.otlp.gateway.input]
+        metrics = [otelcol.exporter.otlp.gateway.input]
       }
     }
