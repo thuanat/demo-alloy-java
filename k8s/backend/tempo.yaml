@@ -15,17 +15,29 @@ spec:
     spec:
       containers:
       - name: tempo
-        image: grafana/tempo:latest
-        args: ["-config.file=/etc/tempo.yaml"]
+        image: grafana/tempo:2.4.1
+        args:
+          - -config.file=/etc/tempo/tempo.yaml
+
         ports:
-        - containerPort: 4317
+        - containerPort: 3200   # http
+        - containerPort: 4317   # otlp grpc
+        - containerPort: 4318   # otlp http
+
         volumeMounts:
         - name: config
-          mountPath: /etc
+          mountPath: /etc/tempo
+
+        - name: data
+          mountPath: /data/tempo
+
       volumes:
       - name: config
         configMap:
           name: tempo-config
+
+      - name: data
+        emptyDir: {}
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -34,19 +46,30 @@ metadata:
   namespace: monitor
 data:
   tempo.yaml: |
+    auth_enabled: false
+
     server:
       http_listen_port: 3200
+
     distributor:
       receivers:
         otlp:
           protocols:
             grpc:
             http:
+
+    ingester:
+      lifecycler:
+        ring:
+          kvstore:
+            store: inmemory
+          replication_factor: 1
+
     storage:
       trace:
         backend: local
         local:
-          path: /tmp/tempo
+          path: /data/tempo/traces
 ---
 apiVersion: v1
 kind: Service
@@ -57,5 +80,12 @@ spec:
   selector:
     app: tempo
   ports:
-  - name: otlp-grpc
-    port: 4317
+    - name: otlp-grpc
+      port: 4317
+      targetPort: 4317
+    - name: otlp-http
+      port: 4318
+      targetPort: 4318
+    - name: http
+      port: 3200
+      targetPort: 3200

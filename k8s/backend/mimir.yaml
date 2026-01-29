@@ -15,17 +15,26 @@ spec:
     spec:
       containers:
       - name: mimir
-        image: grafana/mimir:latest
-        args: ["-config.file=/etc/mimir.yaml"]
+        image: grafana/mimir:2.11.0
+        args:
+          - -config.file=/etc/mimir/mimir.yaml
         ports:
         - containerPort: 8080
+
         volumeMounts:
         - name: config
-          mountPath: /etc
+          mountPath: /etc/mimir
+
+        - name: data
+          mountPath: /data/mimir
+
       volumes:
       - name: config
         configMap:
           name: mimir-config
+
+      - name: data
+        emptyDir: {}
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -34,21 +43,35 @@ metadata:
   namespace: monitor
 data:
   mimir.yaml: |
+    multitenancy_enabled: false
+
     server:
       http_listen_port: 8080
-    multitenancy_enabled: false
+
+    common:
+      path_prefix: /data/mimir
+      storage:
+        backend: filesystem
+        filesystem:
+          dir: /data/mimir
+      ring:
+        kvstore:
+          store: inmemory
+      replication_factor: 1
+
     blocks_storage:
       backend: filesystem
       filesystem:
-        dir: /tmp/mimir
+        dir: /data/mimir/blocks
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: mimir-distributor
+  name: mimir
   namespace: monitor
 spec:
   selector:
     app: mimir
   ports:
-  - port: 8080
+    - port: 8080
+      targetPort: 8080
