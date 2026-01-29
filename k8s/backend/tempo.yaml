@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tempo
+  namespace: monitor
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tempo
+  template:
+    metadata:
+      labels:
+        app: tempo
+    spec:
+      containers:
+      - name: tempo
+        image: grafana/tempo:latest
+        args: ["-config.file=/etc/tempo.yaml"]
+        ports:
+        - containerPort: 4317
+        volumeMounts:
+        - name: config
+          mountPath: /etc
+      volumes:
+      - name: config
+        configMap:
+          name: tempo-config
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tempo-config
+  namespace: monitor
+data:
+  tempo.yaml: |
+    server:
+      http_listen_port: 3200
+    distributor:
+      receivers:
+        otlp:
+          protocols:
+            grpc:
+            http:
+    storage:
+      trace:
+        backend: local
+        local:
+          path: /tmp/tempo
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tempo
+  namespace: monitor
+spec:
+  selector:
+    app: tempo
+  ports:
+  - name: otlp-grpc
+    port: 4317

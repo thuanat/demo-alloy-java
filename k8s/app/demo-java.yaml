@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: demo-java
+  namespace: monitor
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: demo-java
+  template:
+    metadata:
+      labels:
+        app: demo-java
+    spec:
+      containers:
+      - name: demo-java
+        image: demo-java:latest
+        ports:
+        - containerPort: 8080
+        env:
+        - name: OTEL_EXPORTER_OTLP_ENDPOINT
+          value: http://alloy-agent.monitor.svc:4317
+        - name: OTEL_SERVICE_NAME
+          value: demo-java

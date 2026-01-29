@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: alloy-agent
+  namespace: monitor
+spec:
+  selector:
+    matchLabels:
+      app: alloy-agent
+  template:
+    metadata:
+      labels:
+        app: alloy-agent
+    spec:
+      containers:
+      - name: alloy
+        image: grafana/alloy:latest
+        args: ["run", "/etc/alloy/agent.hcl"]
+        volumeMounts:
+        - name: config
+          mountPath: /etc/alloy
+      volumes:
+      - name: config
+        configMap:
+          name: alloy-agent-config

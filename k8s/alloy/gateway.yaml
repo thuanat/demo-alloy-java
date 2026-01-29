@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alloy-gateway
+  namespace: monitor
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: alloy-gateway
+  template:
+    metadata:
+      labels:
+        app: alloy-gateway
+    spec:
+      containers:
+      - name: alloy
+        image: grafana/alloy:latest
+        args: ["run", "/etc/alloy/gateway.hcl"]
+        volumeMounts:
+        - name: config
+          mountPath: /etc/alloy
+      volumes:
+      - name: config
+        configMap:
+          name: alloy-gateway-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: alloy-gateway
+  namespace: monitor
+spec:
+  selector:
+    app: alloy-gateway
+  ports:
+  - name: otlp-grpc
+    port: 4317
+  - name: otlp-http
+    port: 4318
