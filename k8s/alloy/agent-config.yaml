@@ -24,23 +24,23 @@ data:
     }
 
     // =========================
-    // OTLP RECEIVER
+    // OTLP RECEIVER (TRACES + METRICS)
     // =========================
     otelcol.receiver.otlp "default" {
       grpc {}
       http {}
 
       output {
-        traces  = [otelcol.processor.attributes.add_env.input]
-        metrics = [otelcol.processor.attributes.add_env.input]
+        traces  = [otelcol.processor.attributes.env.input]
+        metrics = [otelcol.processor.attributes.env.input]
       }
     }
 
     // =========================
-    // ADD STATIC ATTRIBUTES (SAFE SYNTAX)
+    // ADD STATIC ATTRIBUTES (ALLOY STYLE)
     // =========================
-    otelcol.processor.attributes "add_env" {
-      action {
+    otelcol.processor.attributes "env" {
+      attributes {
         key   = "deployment.environment"
         value = "demo"
       }
