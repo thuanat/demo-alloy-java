@@ -12,14 +12,17 @@ spec:
       labels:
         app: alloy-agent
     spec:
+      serviceAccountName: alloy-agent
       containers:
-      - name: alloy
-        image: grafana/alloy:latest
-        args: ["run", "/etc/alloy/agent.hcl"]
-        volumeMounts:
-        - name: config
-          mountPath: /etc/alloy
+        - name: alloy
+          image: grafana/alloy:latest
+          args:
+            - run
+            - /etc/alloy/agent.hcl
+          volumeMounts:
+            - name: config
+              mountPath: /etc/alloy
       volumes:
-      - name: config
-        configMap:
-          name: alloy-agent-config
+        - name: config
+          configMap:
+            name: alloy-agent-config
