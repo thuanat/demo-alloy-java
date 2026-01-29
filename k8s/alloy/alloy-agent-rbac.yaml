@@ -9,33 +9,29 @@ kind: ClusterRole
 metadata:
   name: alloy-agent
 rules:
-  # Cho discovery + metadata (pods, namespaces, nodes)
+  # Pods metadata + logs
   - apiGroups: [""]
     resources:
       - pods
-      - namespaces
-      - nodes
+      - pods/log
     verbs:
       - get
       - list
       - watch
 
-  # Cho loki.source.kubernetes (labels, annotations)
-  - apiGroups: ["apps"]
-    resources:
-      - replicasets
-      - deployments
-      - statefulsets
-      - daemonsets
-    verbs:
-      - get
-      - list
-      - watch
-
-  # Cho event (optional nhưng nên có)
+  # Namespaces (label enrichment)
   - apiGroups: [""]
     resources:
-      - events
+      - namespaces
+    verbs:
+      - get
+      - list
+      - watch
+
+  # Nodes (node name, labels)
+  - apiGroups: [""]
+    resources:
+      - nodes
     verbs:
       - get
       - list
