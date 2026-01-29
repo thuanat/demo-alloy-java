@@ -5,7 +5,6 @@ metadata:
   namespace: monitor
 data:
   gateway.hcl: |
-    // ================= RECEIVER =================
     otelcol.receiver.otlp "otlp" {
       grpc {}
       http {}
@@ -16,7 +15,6 @@ data:
       }
     }
 
-    // ================= PROCESSORS =================
     otelcol.processor.batch "default" {
       output {
         traces  = [otelcol.processor.tail_sampling.apm.input]
@@ -54,12 +52,12 @@ data:
       }
     }
 
-    // ================= EXPORTERS =================
-
     otelcol.exporter.otlp "tempo" {
-      endpoint = "tempo.monitor.svc:4317"
-      tls {
-        insecure = true
+      client {
+        endpoint = "tempo.monitor.svc:4317"
+        tls {
+          insecure = true
+        }
       }
     }
 
