@@ -23,11 +23,22 @@ data:
       }
     }
 
+    
     otelcol.processor.transform "logs" {
+      error_mode = "ignore"
+
+      resource_statements {
+        context = "resource"
+        statements = [
+         
+          "set(attributes[\"loki.resource.labels\"], \"service.name\")"
+        ]
+      }
+
+     
       log_statements {
         context = "log"
         statements = [
-          "set(attributes[\"service_name\"], resource.attributes[\"service.name\"])",
           "set(attributes[\"severity\"], severity_text)",
           "set(attributes[\"trace_id\"], trace_id)",
         ]
@@ -37,6 +48,7 @@ data:
         logs = [otelcol.exporter.loki.apm.input]
       }
     }
+    // -------------------------
 
     otelcol.processor.tail_sampling "apm" {
       policy {
