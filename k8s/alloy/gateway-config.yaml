@@ -88,9 +88,9 @@ data:
 
       stage.labels {
         values = {
-          trace_id    = "trace_id"
-          severity    = "severity"
-          service_name = "{{ .resource.service.name }}"
+          trace_id    = "trace_id",
+          severity    = "severity",
+          service_name = "{{ .resource.service.name }}",
         }
       }
 
