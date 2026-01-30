@@ -5,7 +5,9 @@ metadata:
   namespace: monitor
 data:
   gateway.hcl: |
-   
+    # ========================
+    # OTLP RECEIVER
+    # ========================
     otelcol.receiver.otlp "otlp" {
       grpc {}
       http {}
@@ -13,11 +15,14 @@ data:
       output {
         traces  = [otelcol.processor.batch.default.input]
         metrics = [otelcol.processor.batch.default.input]
-        logs    = [otelcol.processor.batch.logs.input]
+        logs    = [otelcol.processor.transform.logs.input]
       }
     }
 
-   
+    # ========================
+    # BATCH PROCESSOR
+    # (TRACES + METRICS)
+    # ========================
     otelcol.processor.batch "default" {
       output {
         traces  = [otelcol.processor.tail_sampling.apm.input]
@@ -25,14 +30,26 @@ data:
       }
     }
 
+    # ========================
+    # LOGS TRANSFORM
+    # extract body.traceid -> label trace_id
+    # ========================
+    otelcol.processor.transform "logs" {
+      log_statements {
+        context = "log"
+        statements = [
+          "set(attributes[\"trace_id\"], body.traceid)"
+        ]
+      }
 
-    otelcol.processor.batch "logs" {
       output {
         logs = [otelcol.exporter.loki.apm.input]
       }
     }
 
-
+    # ========================
+    # TAIL SAMPLING (TRACES)
+    # ========================
     otelcol.processor.tail_sampling "apm" {
       policy {
         name = "errors"
@@ -63,7 +80,9 @@ data:
       }
     }
 
- 
+    # ========================
+    # TEMPO EXPORTER
+    # ========================
     otelcol.exporter.otlp "tempo" {
       client {
         endpoint = "tempo.monitor.svc:4317"
@@ -73,7 +92,9 @@ data:
       }
     }
 
-   
+    # ========================
+    # METRICS -> MIMIR
+    # ========================
     otelcol.exporter.prometheus "default" {
       forward_to = [prometheus.remote_write.mimir.receiver]
     }
@@ -84,8 +105,18 @@ data:
       }
     }
 
-
+    # ========================
+    # LOGS -> LOKI (APM)
+    # ========================
     otelcol.exporter.loki "apm" {
+      labels {
+        attributes = [
+          "trace_id",
+          "service.name",
+          "severity"
+        ]
+      }
+
       forward_to = [loki.write.apm.receiver]
     }
 
