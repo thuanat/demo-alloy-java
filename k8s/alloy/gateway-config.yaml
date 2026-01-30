@@ -12,6 +12,7 @@ data:
       output {
         traces  = [otelcol.processor.batch.default.input]
         metrics = [otelcol.processor.batch.default.input]
+        logs    = [otelcol.processor.transform.logs.input]
       }
     }
 
@@ -19,6 +20,21 @@ data:
       output {
         traces  = [otelcol.processor.tail_sampling.apm.input]
         metrics = [otelcol.exporter.prometheus.default.input]
+      }
+    }
+
+    otelcol.processor.transform "logs" {
+      log_statements {
+        context = "log"
+        statements = [
+          "set(attributes[\"service_name\"], resource.attributes[\"service.name\"])",
+          "set(attributes[\"severity\"], severity_text)",
+          "set(attributes[\"trace_id\"], trace_id)",
+        ]
+      }
+
+      output {
+        logs = [otelcol.exporter.loki.apm.input]
       }
     }
 
@@ -71,34 +87,4 @@ data:
       }
     }
 
-    loki.source.otlp "logs" {
-      grpc {}
-      http {}
-
-      forward_to = [loki.process.apm.receiver]
-    }
-
-    loki.process "apm" {
-      stage.json {
-        expressions = {
-          trace_id = "traceid",
-          severity = "severity",
-        }
-      }
-
-      stage.labels {
-        values = {
-          trace_id    = "trace_id",
-          severity    = "severity",
-          service_name = "{{ .resource.service.name }}",
-        }
-      }
-
-      forward_to = [loki.write.apm.receiver]
-    }
-
-    loki.write "apm" {
-      endpoint {
-        url = "http://loki.monitor.svc:3100/loki/api/v1/push"
-      }
-    }
+    otelcol.exporter.loki "apm" {}
