@@ -26,16 +26,11 @@ data:
     otelcol.processor.transform "logs" {
       error_mode = "ignore"
 
-      resource_statements {
-        context = "resource"
-        statements = [
-          "set(attributes[\"loki.resource.labels\"], \"service.name\")",
-        ]
-      }
-
+      
       log_statements {
         context = "log"
         statements = [
+          "set(attributes[\"loki.resource.labels\"], \"service.name\")",
           "set(attributes[\"severity\"], severity_text)",
           "set(attributes[\"trace_id\"], trace_id)",
         ]
