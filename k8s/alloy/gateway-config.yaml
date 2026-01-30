@@ -26,7 +26,7 @@ data:
 
     otelcol.processor.batch "logs" {
       output {
-        logs = [otelcol.exporter.loki.default.input]
+        logs = [loki.write.apm.receiver]
       }
     }
 
@@ -80,8 +80,9 @@ data:
     }
 
   
-    otelcol.exporter.loki "default" {
+    loki.write "apm" {
       endpoint {
         url = "http://loki.monitor.svc:3100/loki/api/v1/push"
       }
     }
+
