@@ -81,11 +81,9 @@ data:
         url = "http://loki.monitor.svc:3100/loki/api/v1/push"
       }
 
-      labels {
-        values = {
-          trace_id    = "{{ .trace_id }}",
-          service     = "{{ .resource.service.name }}",
-          severity    = "{{ .severity }}",
-        }
+      labels = {
+        trace_id = "{{ .trace_id }}"
+        service  = "{{ .resource.service.name }}"
+        severity = "{{ .severity }}"
       }
     }
