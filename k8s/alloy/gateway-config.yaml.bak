@@ -12,6 +12,7 @@ data:
       output {
         traces  = [otelcol.processor.batch.default.input]
         metrics = [otelcol.processor.batch.default.input]
+        logs    = [otelcol.exporter.loki.apm.input]
       }
     }
 
@@ -71,29 +72,7 @@ data:
       }
     }
 
-    loki.source.otlp "logs" {
-      grpc {}
-      http {}
-
-      forward_to = [loki.process.apm.receiver]
-    }
-
-    loki.process "apm" {
-      stage.json {
-        expressions = {
-          trace_id = "traceid"
-          severity = "severity"
-        }
-      }
-
-      stage.labels {
-        values = {
-          trace_id    = "trace_id"
-          severity    = "severity"
-          service_name = "{{ .resource.service.name }}"
-        }
-      }
-
+    otelcol.exporter.loki "apm" {
       forward_to = [loki.write.apm.receiver]
     }
 
