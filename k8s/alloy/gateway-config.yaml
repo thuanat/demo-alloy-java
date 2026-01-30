@@ -87,4 +87,12 @@ data:
       }
     }
 
-    otelcol.exporter.loki "apm" {}
+    otelcol.exporter.loki "apm" {
+      forward_to = [loki.write.apm.receiver]
+    }
+
+   loki.write "apm" {
+     endpoint {
+       url = "http://loki.monitor.svc:3100/loki/api/v1/push"
+    }
+  }
