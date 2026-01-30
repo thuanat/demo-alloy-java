@@ -5,6 +5,9 @@ metadata:
   namespace: monitor
 data:
   gateway.hcl: |
+    ############################
+    # OTLP RECEIVER
+    ############################
     otelcol.receiver.otlp "otlp" {
       grpc {}
       http {}
@@ -16,6 +19,9 @@ data:
       }
     }
 
+    ############################
+    # BATCH PROCESSOR (TRACE + METRIC)
+    ############################
     otelcol.processor.batch "default" {
       output {
         traces  = [otelcol.processor.tail_sampling.apm.input]
@@ -23,13 +29,18 @@ data:
       }
     }
 
-
+    ############################
+    # BATCH PROCESSOR (LOGS)
+    ############################
     otelcol.processor.batch "logs" {
       output {
-        logs = [loki.write.apm.receiver]
+        logs = [otelcol.exporter.loki.apm.input]
       }
     }
 
+    ############################
+    # TAIL SAMPLING (APM)
+    ############################
     otelcol.processor.tail_sampling "apm" {
       policy {
         name = "errors"
@@ -60,6 +71,9 @@ data:
       }
     }
 
+    ############################
+    # TEMPO EXPORTER (TRACES)
+    ############################
     otelcol.exporter.otlp "tempo" {
       client {
         endpoint = "tempo.monitor.svc:4317"
@@ -69,6 +83,9 @@ data:
       }
     }
 
+    ############################
+    # PROMETHEUS EXPORTER (METRICS)
+    ############################
     otelcol.exporter.prometheus "default" {
       forward_to = [prometheus.remote_write.mimir.receiver]
     }
@@ -79,10 +96,15 @@ data:
       }
     }
 
-  
+    ############################
+    # LOKI EXPORTER (LOGS)
+    ############################
+    otelcol.exporter.loki "apm" {
+      forward_to = [loki.write.apm.receiver]
+    }
+
     loki.write "apm" {
       endpoint {
         url = "http://loki.monitor.svc:3100/loki/api/v1/push"
       }
     }
-
