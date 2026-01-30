@@ -82,8 +82,8 @@ data:
       }
 
       labels = {
-        trace_id = "{{ .trace_id }}"
-        service  = "{{ .resource.service.name }}"
-        severity = "{{ .severity }}"
+        trace_id = "{{ .trace_id }}",
+        service  = "{{ .resource.service.name }}",
+        severity = "{{ .severity }}",
       }
     }
