@@ -81,8 +81,8 @@ data:
     loki.process "apm" {
       stage.json {
         expressions = {
-          trace_id = "traceid"
-          severity = "severity"
+          trace_id = "traceid",
+          severity = "severity",
         }
       }
 
