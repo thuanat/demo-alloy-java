@@ -27,7 +27,7 @@ data:
       log_statements {
         context = "log"
         statements = [
-          "set(attributes[\"trace_id\"], body.traceid)"
+          "set(attributes[\"trace_id\"], body.traceid)",
         ]
       }
 
@@ -90,7 +90,7 @@ data:
         attributes = [
           "trace_id",
           "service.name",
-          "severity"
+          "severity",
         ]
       }
 
